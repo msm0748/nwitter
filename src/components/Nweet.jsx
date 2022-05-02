@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { dbService } from "fBase";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { dbService, storageService } from "fBase";
+import { doc, deleteDoc, updateDoc, getFirestore } from "firebase/firestore";
+import { deleteObject, ref } from "firebase/storage";
+// import { storageService } from "fbase";
 
 const Nweet = ({ nweetObj, isOwner }) => {
   const [editing, setEditing] = useState(false);
@@ -11,6 +13,9 @@ const Nweet = ({ nweetObj, isOwner }) => {
     if (ok) {
       //글 삭제
       await deleteDoc(NweetTextRef);
+      //이미지 삭제
+      await deleteDoc(doc(getFirestore(), `nweets/${nweetObj.id}`));
+      await deleteObject(ref(storageService, nweetObj.attachmentUrl));
     }
   };
   const toggleEditing = () => setEditing((prev) => !prev);
@@ -36,13 +41,7 @@ const Nweet = ({ nweetObj, isOwner }) => {
           {isOwner && (
             <>
               <form onSubmit={onSubmit}>
-                <input
-                  type="text"
-                  placeholder="Edit your nweet"
-                  value={newNweet}
-                  onChange={onChange}
-                  required
-                />
+                <input type="text" placeholder="Edit your nweet" value={newNweet} onChange={onChange} required />
                 <input type="submit" value="Update Nweet" />
               </form>
               <button onClick={toggleEditing}>cancle</button>
@@ -52,6 +51,7 @@ const Nweet = ({ nweetObj, isOwner }) => {
       ) : (
         <>
           <h4>{nweetObj.text}</h4>
+          {nweetObj.attachmentUrl && <img src={nweetObj.attachmentUrl} width="50px;" height="50px;" alt="" />}
           {isOwner && (
             <>
               <button onClick={onDeleteClick}>Delete Nweet</button>
